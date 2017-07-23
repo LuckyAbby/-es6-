@@ -89,6 +89,75 @@ for(let i of fn()) {
 
 对于原生的数组是具有内部的 Iterator 接口的，但是原生的对象没有。通常将 Generator 函数加到对象的Symbol.iterator属性上面即可。
 
+## yeild* 表达式
+
+在一个 Generator 函数里面执行另一个 Generator 函数。
+
+看一个例子：
+```
+function* inner() {
+  yield 'hello!';
+}
+
+function* outer1() {
+  yield 'open';
+  yield inner();
+  yield 'close';
+}
+
+var gen = outer1()
+gen.next().value // "open"
+gen.next().value // 返回一个遍历器对象
+gen.next().value // "close"
+
+function* outer2() {
+  yield 'open'
+  yield* inner()
+  yield 'close'
+}
+
+var gen = outer2()
+gen.next().value // "open"
+gen.next().value // "hello!"
+gen.next().value // "close"
+```
+上面例子中，outer2使用了yield*，outer1没使用。结果就是，outer1返回一个遍历器对象，outer2返回该遍历器对象的内部值。
+
+```
+function* gen(){
+  yield* ["a", "b", "c"];
+}
+
+gen().next() // { value:"a", done:false }
+
+上面代码中，yield命令后面如果不加星号，返回的是整个数组，加了星号就表示返回的是数组的遍历器对象。
+```
+yield* 可以很方便地用来遍历嵌套数组的成员，不仅是数组，很多嵌套的解构都可以很方便取出来。
+```
+function* iterTree(tree) {
+  if (Array.isArray(tree)) {
+    for(let i=0; i < tree.length; i++) {
+      yield* iterTree(tree[i]);
+    }
+  } else {
+    yield tree;
+  }
+}
+
+const tree = [ 'a', ['b', 'c'], ['d', 'e'] ];
+
+for(let x of iterTree(tree)) {
+  console.log(x);
+}
+// a
+// b
+// c
+// d
+// e
+
+```
+
+
 
 
 
