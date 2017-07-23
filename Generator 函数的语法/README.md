@@ -40,4 +40,57 @@ yield 表达式表示暂停，调用 next 方法将内部指针移到该语句�
 
 2. yield 表达式只能在 Generator 函数里面使用，在其余地方使用会报错。
 
+## next 方法的参数
+
+yield 表达式本身返回 undefined 。next 方法的参数会被当成上一个 yield 表达式的的返回值。
+使用 阮老师的例子：
+```
+function* foo(x) {
+  var y = 2 * (yield (x + 1));
+  var z = yield (y / 3);
+  return (x + y + z);
+}
+
+var a = foo(5);
+a.next() // Object{value:6, done:false}
+a.next() // Object{value:NaN, done:false}
+a.next() // Object{value:NaN, done:true}
+
+var b = foo(5);
+b.next() // { value:6, done:false }
+b.next(12) // { value:8, done:false }
+b.next(13) // { value:42, done:true }
+
+```
+next 不带参数的时候，yield(x+1) 返回 undefined，因此第二个打印出 NaN，对第三个同理。
+
+当 next 带参数的时候，yield (x + 1) 的值就是参数 12，因此 yield (y / 3) 的值就是8。第三个的计算方法同理。
+
+注意，第一个 next 一般是不带参数的，只表示启动遍历器。
+
+## for of 循环
+
+for...of循环可以自动遍历 Generator 函数时生成的Iterator对象，且此时不再需要调用next方法。
+
+例如：
+```
+function *fn() {
+	yield 'a';
+	yield 'b';
+	yield 'c';
+	return 'd';
+}
+for(let i of fn()) {
+	console.log(i);
+}
+// 'a' 'b' 'c'
+```
+注意这里不会返回 'd'，因为一旦 next 方法的返回对象的 done 属性是 true ,for of循环就会中止，并且不会包含这个返回对象。
+
+对于原生的数组是具有内部的 Iterator 接口的，但是原生的对象没有。通常将 Generator 函数加到对象的Symbol.iterator属性上面即可。
+
+
+
+
+
 
